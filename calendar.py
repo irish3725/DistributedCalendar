@@ -52,7 +52,7 @@ class Calendar:
  
         # find a port to put new connection on 
         port = 5000
-        while port not in self.nodes_D.items():
+        while port in self.nodes_D.items():
             port = randint(5001,6000)       
  
         # add host and port to nodes_D
