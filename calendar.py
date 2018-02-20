@@ -71,14 +71,6 @@ class Calendar:
             print(data)
 
             message = input('> ')
-        conn.close()
-        self.finish()
-        
-    def finish():
-        for threads in self.thread_L:
-            thread.join()
-        print('closed all threads')
-        sys.exit()
  
 if __name__ == '__main__':
     # create new calendar
