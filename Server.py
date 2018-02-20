@@ -1,8 +1,8 @@
 import socket
  
 def Main():
-#    host = socket.gethostname() 
-    host = "127.0.0.1"
+    host = socket.gethostname() 
+#    host = "127.0.0.1"
     port = 5000
      
     mySocket = socket.socket()
