@@ -1,4 +1,5 @@
 import socket
+from random import randint
 import threading
 import sys
 
@@ -8,24 +9,32 @@ class Calendar:
     def __init__(self):
 #        self.log = Log.Log()
         # initialize nodes_D with self, localhost, port 5000
-        self.nodes_D = {'127.0.0.1' : 5000}
+        self.nodes_D = {}
         # add thread to list with localhost ip as name and start new_connection
-        thread_L = [threading.Thread(name='127.0.0.1', target=self.new_connection('127.0.0.1'))] 
+        self.thread_L = [] 
+        # start listening for new connections
+        self.start_listen()
 
-    ## @param name - name of new connection 
-    def new_connection(self, name):
-       
-        # hose is inputted name 
-        host = name
-        # port is dict entry at name
-        port = self.nodes_D[name] 
+    ## create thread to listen for new connections
+    def start_listen(self):
+        print('listening on port 5000')
+
+    ## listen for new connections
+    def listen(self):
+        # host is this computer
+        host = socket.gethostname()
+     
+        # port is 5000
+        port = 5000
+ 
+        # create new socket 
+        new_socket = socket.socket()
+        new_socket.bind((host,port))
          
-        mySocket = socket.socket()
-        mySocket.bind((host,port))
-         
-        mySocket.listen(1)
-        conn, addr = mySocket.accept()
-        print ("Connection from: " + str(addr))
+        new_socket.listen(1)
+        
+        conn, addr = new_socket.accept()
+        print("new connection from: " + str(addr))
         while True:
             data = conn.recv(1024).decode()
             if not data:
@@ -37,6 +46,62 @@ class Calendar:
             conn.send(data.encode())
                  
         conn.close()
+
+    ## @param host - ip of new host
+    def add_connection(self, host):
+ 
+        # find a port to put new connection on 
+        port = 5000
+        while port not in self.nodes_D.items():
+            port = randint(5001,6000)       
+ 
+        # add host and port to nodes_D
+        self.nodes_D[host] = port
+ 
+        # create new socket 
+        new_socket = socket.socket()
+        new_socket.connect((host, 5000))
          
+        message = host + ',' + str(port)       
+ 
+        while message != 'q':
+            new_socket.send(message.encode())
+            data = new_socket.recv(1024).decode()
+
+            print(data)
+
+            message = input('> ')
+        conn.close()
+        self.finish()
+        
+    def finish():
+        for threads in self.thread_L:
+            thread.join()
+        print('closed all threads')
+        sys.exit()
+ 
 if __name__ == '__main__':
+    # create new calendar
     cal = Calendar()
+    
+    # listen on listen_thread
+    listen_thread = threading.Thread(name='listen', target=cal.listen)
+    print('made it past listen_thread line')
+    # append thread to our list
+    cal.thread_L.append(listen_thread)
+    # start thread
+    listen_thread.start()
+
+    # if arguments are given, add them to connections
+    if len(sys.argv) > 1:
+        for ip in sys.argv:
+            if ip != 'calendar.py':
+                print('Connecting to ' + ip)
+                new_thread = threading.Thread(name=ip, target=cal.add_connection, args=(ip, ))
+                cal.thread_L.append(new_thread)
+                new_thread.start() 
+
+    for thread in cal.thread_L:
+        print('closing thread:', thread)
+        thread.join()
+
