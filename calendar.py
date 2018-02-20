@@ -42,10 +42,43 @@ class Calendar:
             print ("from connected  user: " + str(data))
              
             data = str(data).upper()
-            print ("sending: " + str(data))
+         
+            
+        
+        conn.close()
+
+    def connect_perm_connection(self, host, port):
+        # create new socket 
+        new_socket = socket.socket()
+        new_socket.connect((host, port))
+         
+        # send other host info for this node
+        message = 'we did it!!'       
+        new_socket.send(message.encode())
+
+    def listen_perm_connection(self, port):
+        # host is this computer
+        host = socket.gethostname()
+ 
+        # create new socket 
+        new_socket = socket.socket()
+        new_socket.bind((host,port))
+         
+        new_socket.listen(1)
+        
+        conn, addr = new_socket.accept()
+        print("Connection from", str(addr), 'on port', port)
+        while True:
+            data = conn.recv(1024).decode()
+            if not data:
+                    break
+            print("from", str(addr), ':', str(data))
+             
+            data = str(data).upper()
+            print("sending", str(data), 'to', str(add))
             conn.send(data.encode())
                  
-        conn.close()
+        conn.close()        
 
     ## @param host - ip of new host
     def add_connection(self, host):
@@ -62,15 +95,12 @@ class Calendar:
         new_socket = socket.socket()
         new_socket.connect((host, 5000))
          
-        message = host + ',' + str(port)       
- 
-        while message != 'q':
-            new_socket.send(message.encode())
-            data = new_socket.recv(1024).decode()
-
-            print(data)
-
-            message = input('> ')
+        # send other host info for this node
+        message = str(port)       
+        new_socket.send(message.encode())
+       
+        # start perminant connection on another port
+        perm_connection(port)
  
 if __name__ == '__main__':
     # create new calendar
@@ -94,6 +124,6 @@ if __name__ == '__main__':
                 new_thread.start() 
 
     for thread in cal.thread_L:
-        print('closing thread:', thread)
+        print('joining thread:', thread.name)
         thread.join()
 
