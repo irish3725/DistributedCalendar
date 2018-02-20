@@ -1,0 +1,2 @@
+alias python='python3'
+alias get='cd && rm -rf DistributedCalendar && git clone https://github.com/irish3725/DistributedCalendar && cd DistributedCalendar'
