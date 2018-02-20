@@ -100,6 +100,9 @@ class Calendar:
         # send other host info for this node
         message = str(port)       
         new_socket.send(message.encode())
+
+        new_socket.shutdown(socket.SHUT_RDWR)        
+        new_socket.close()        
        
         # start perminant connection on another port
         self.listen_perm_connection(port)
