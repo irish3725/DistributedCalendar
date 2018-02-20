@@ -42,7 +42,7 @@ class Calendar:
             print ("from connected  user: " + str(data))
              
             data = str(data).upper()
-         
+            self.connect_perm_connection(str(addr), int(data))  
             
         
         conn.close()
@@ -57,6 +57,7 @@ class Calendar:
         new_socket.send(message.encode())
 
     def listen_perm_connection(self, port):
+        print('Listening for host to connect on port', port)
         # host is this computer
         host = socket.gethostname()
  
@@ -100,7 +101,7 @@ class Calendar:
         new_socket.send(message.encode())
        
         # start perminant connection on another port
-        perm_connection(port)
+        self.listen_perm_connection(port)
  
 if __name__ == '__main__':
     # create new calendar
