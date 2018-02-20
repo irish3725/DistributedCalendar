@@ -35,19 +35,20 @@ class Calendar:
         
         conn, addr = new_socket.accept()
         print("new connection from: " + str(addr))
-        while True:
-            data = conn.recv(1024).decode()
-            if not data:
-                    break
-            print ("from connected  user: " + str(data))
-             
-            data = str(data).upper()
-            self.connect_perm_connection(str(addr), int(data))  
+
+        data = conn.recv(1024).decode()
+        
+        print ("from connected  user: " + str(data))
+         
+        data = str(data).upper()
+
+        self.connect_perm_connection(str(addr), int(data))  
             
         
         conn.close()
 
     def connect_perm_connection(self, host, port):
+        print('connecting to', host, 'on port', port)
         # create new socket 
         new_socket = socket.socket()
         new_socket.connect((host, port))
