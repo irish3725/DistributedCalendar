@@ -2,6 +2,9 @@ import socket
 from random import randint
 import threading
 import sys
+from boto.sqs.connection import SQSConnection
+from boto.sqs.message import Message
+
 
 ## Main class for Calendar Application
 class Calendar:
@@ -13,7 +16,13 @@ class Calendar:
         # add thread to list with localhost ip as name and start new_connection
         self.thread_L = [] 
         # start listening for new connections
-        self.start_listen()
+#        self.start_listen()
+
+        new_sqs = SQSConnection('accessKey', 'SecRetKey')
+
+
+
+
 
     ## create thread to listen for new connections
     def start_listen(self):
@@ -64,7 +73,7 @@ class Calendar:
  
         # create new socket 
         new_socket = socket.socket()
-        new_socket.bind((host,port))
+        new_socket.bind((host, port))
          
         new_socket.listen(1)
         
@@ -112,23 +121,24 @@ if __name__ == '__main__':
     cal = Calendar()
     
     # listen on listen_thread
-    listen_thread = threading.Thread(name='listen', target=cal.listen)
-    print('made it past listen_thread line')
+#    listen_thread = threading.Thread(name='listen', target=cal.listen)
+#    print('made it past listen_thread line')
     # append thread to our list
-    cal.thread_L.append(listen_thread)
+#    cal.thread_L.append(listen_thread)
     # start thread
-    listen_thread.start()
+#    listen_thread.start()
 
     # if arguments are given, add them to connections
-    if len(sys.argv) > 1:
-        for ip in sys.argv:
-            if ip != 'calendar.py':
-                print('Connecting to ' + ip)
-                new_thread = threading.Thread(name=ip, target=cal.add_connection, args=(ip, ))
-                cal.thread_L.append(new_thread)
-                new_thread.start() 
+#    if len(sys.argv) > 1:
 
-    for thread in cal.thread_L:
-        print('joining thread:', thread.name)
-        thread.join()
+#        for ip in sys.argv:
+#            if ip != 'calendar.py':
+#                print('Connecting to ' + ip)
+#                new_thread = threading.Thread(name=ip, target=cal.add_connection, args=(ip, ))
+#                cal.thread_L.append(new_thread)
+#                new_thread.start() 
+
+#    for thread in cal.thread_L:
+#        print('joining thread:', thread.name)
+#        thread.join()
 
