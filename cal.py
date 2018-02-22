@@ -2,8 +2,8 @@ import socket
 from random import randint
 import threading
 import sys
-from boto.sqs.connection import SQSConnection
-from boto.sqs.message import Message
+#from boto.sqs.message import Message
+import boto3
 
 
 ## Main class for Calendar Application
@@ -18,7 +18,7 @@ class Calendar:
         # start listening for new connections
 #        self.start_listen()
 
-        new_sqs = SQSConnection('accessKey', 'SecRetKey')
+        new_sqs = boto3.resource('sqs', 'us-east-2')
 
 
 
