@@ -9,21 +9,23 @@ import hashlib #import boto3
 class Calendar:
 
     ## @param ip_L -  list of ip addresses to connect to 
-    def __init__(self, ip_L):
-        # list of ip addresses to connect to
-        self.ip_L = ip_L 
-        print('known ips:', ip_L)
-
+    def __init__(self, my_id=1):
         # create log as set
         self.log = {}
         # create logical clock and init to 0
         self.clock = 0
         # create process id as sha256 hash of system time       
-        self.pid_S = hashlib.sha256(str(time.time()).encode()).hexdigest()
+        self.pid_S = my_id
         # create list of known processes and and self
         self.processes_L = [self.pid_S] 
+        # create T with all spots initialized to 0
+        self.T = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
         # create sqs object 
 #        new_sqs = boto3.resource('sqs', 'us-east-2')
+
+    ## incriments clock and correct spot in self.T
+    def inc_clock(self):
+        self.clock += 1
 
     ## turn start day/time and end day/time to valid log entry 
     ## @param s_day - starting day of entry
@@ -32,15 +34,17 @@ class Calendar:
     ## @param e_time - ending time of entry
     def create_entry(self, p_L, s_day, s_time, e_day, e_time):
         # incriment clock every time entry is created
-        self.clock += 1
+        self.inc_clock()
+        
+        #
 
         # initialize start and end as the number 0
         start = 0
         end = 0
 
-        # create id for entry as this process's pid with 
-        # the current local clock time concatonated on the end
-        entry_id = self.pid_S + str(self.clock)
+        # create id for entry 
+        # id is sha256 hash of current processor time with clock time concat on end
+        entry_id = hashlib.sha256(str(time.time()).encode()).hexdigest() + str(self.clock)
         
         # convert day part of start and end
         start += utils.convert_day(s_day)
@@ -78,6 +82,6 @@ class Calendar:
 
 if __name__ == '__main__':
         # create new calendar passing all arguments after self
-        cal = Calendar(sys.argv[1:])
+        cal = Calendar()
 
         cal.demo_cal() 
