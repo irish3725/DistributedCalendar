@@ -1,8 +1,7 @@
 import threading
 import time
 import sys
-#from boto.sqs.connection import SQSConnection
-#from boto.sqs.message import Message
+#import boto3
 
 
 ## Main class for Calendar Application
@@ -18,8 +17,9 @@ class Calendar:
 #        self.nodes_D = {}
         # add thread to list with localhost ip as name and start new_connection
         self.thread_L = [] 
-
-#        new_sqs = SQSConnection('accessKey', 'SecRetKey')
+       
+        # create sqs object 
+#        new_sqs = boto3.resource('sqs', 'us-east-2')
 
     def print_stuff(self, stuff):
         for i in range(10000000000):
