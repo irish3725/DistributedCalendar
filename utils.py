@@ -1,4 +1,5 @@
 import math
+import json
 
 ## turn day (monday-sunday)
 ## to number (000 - 600)
@@ -38,8 +39,7 @@ def convert_day(day):
         return 'Sunday'
 
 ## convert hours and minutes to a number between 0 and 47
-## where 2:00 (military time) is 4 
-## and 16:30 is 33
+## where 2:00 (military time) is 4 ## and 16:30 is 33
 ## @param time - string time in format hh:mm
 def convert_time(time):
     # get hours and minuts from string time
@@ -111,3 +111,17 @@ def print_entry(entry):
         print('\t', process)
     print('For', duration, '\nEnding on', e_day, 'at', e_time)
 
+## convert some datastructure to a string
+## I made this because I can never remember
+## if I should use dumps or loads
+## @param struc - some structure to be converted to a string
+def struc_to_string(struc):
+    return json.dumps(struc)
+
+## convert some string to a structure
+## I made this because I can never remember
+## if I should use dumps or loads
+## @param string - some structure to be converted to a string
+def string_to_struc(string):
+    return json.loads(string)
+    

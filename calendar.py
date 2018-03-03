@@ -54,27 +54,30 @@ class Calendar:
 
     def add_to_log(self, entry):
         self.log[entry[0]] = entry[1:]
+    
+    def demo_cal(self):
+        entry = cal.create_entry(cal.processes_L, 'Tuesday', '22:00', 'Thursday', '6:00')
+        cal.add_to_log(entry)
+
+        entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Sunday', '6:30')
+        cal.add_to_log(entry)
+
+        entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Saturday', '16:30')
+        cal.add_to_log(entry)
+
+        entry = cal.create_entry(cal.processes_L, 'Monday', '0:30', 'Monday', '16:00')
+        cal.add_to_log(entry)
+
+       
+        for event in cal.log.keys():
+            # recreate calendar entry from dictionary
+            entry = [event] 
+            entry.extend(cal.log[event])
+            # print that entry
+            utils.print_entry(entry)
 
 if __name__ == '__main__':
-    # create new calendar passing all arguments after self
-    cal = Calendar(sys.argv[1:])
+        # create new calendar passing all arguments after self
+        cal = Calendar(sys.argv[1:])
 
-    entry = cal.create_entry(cal.processes_L, 'Tuesday', '22:00', 'Thursday', '6:00')
-    cal.add_to_log(entry)
-
-    entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Sunday', '6:30')
-    cal.add_to_log(entry)
-
-    entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Saturday', '16:30')
-    cal.add_to_log(entry)
-
-    entry = cal.create_entry(cal.processes_L, 'Monday', '0:30', 'Monday', '16:00')
-    cal.add_to_log(entry)
-   
-    for event in cal.log.keys():
-        # recreate calendar entry from dictionary
-        entry = [event] 
-        entry.extend(cal.log[event])
-        # print that entry
-        utils.print_entry(entry)
- 
+        cal.demo_cal() 
