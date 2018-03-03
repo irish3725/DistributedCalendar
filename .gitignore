@@ -1,4 +1,5 @@
 
---pychache*
+__pychache*
 *.pyc
+*.pub
 
