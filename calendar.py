@@ -8,16 +8,16 @@ import hashlib #import boto3
 ## Main class for Calendar Application
 class Calendar:
 
-    ## @param ip_L -  list of ip addresses to connect to 
+    ## @param my_id - id of this process
     def __init__(self, my_id=1):
         # create log as set
         self.log = {}
         # create logical clock and init to 0
         self.clock = 0
         # create process id as sha256 hash of system time       
-        self.pid_S = my_id
+        self.pid = my_id
         # create list of known processes and and self
-        self.processes_L = [self.pid_S] 
+        self.processes_L = [my_id] 
         # create T with all spots initialized to 0
         self.T = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
         # create sqs object 
@@ -26,6 +26,12 @@ class Calendar:
     ## incriments clock and correct spot in self.T
     def inc_clock(self):
         self.clock += 1
+        self.T[self.pid][self.pid] = self.clock
+
+    ## deletes entry with that entry id
+    ## @param entry_id - id of entry to be deleted
+    def remove_from_log(self, entry_id):
+        del self.log[entry_id]
 
     ## turn start day/time and end day/time to valid log entry 
     ## @param s_day - starting day of entry
@@ -56,29 +62,40 @@ class Calendar:
 
         return [entry_id, p_L, str(start).zfill(3), str(end).zfill(3)]
 
+    ## adds entry to log
+    ## @param entry - entry to be entered into log
     def add_to_log(self, entry):
         self.log[entry[0]] = entry[1:]
-    
-    def demo_cal(self):
-        entry = cal.create_entry(cal.processes_L, 'Tuesday', '22:00', 'Thursday', '6:00')
-        cal.add_to_log(entry)
 
-        entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Sunday', '6:30')
-        cal.add_to_log(entry)
-
-        entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Saturday', '16:30')
-        cal.add_to_log(entry)
-
-        entry = cal.create_entry(cal.processes_L, 'Monday', '0:30', 'Monday', '16:00')
-        cal.add_to_log(entry)
-
-       
+    ## prints contents of log
+    def print_log(self):
         for event in cal.log.keys():
             # recreate calendar entry from dictionary
             entry = [event] 
             entry.extend(cal.log[event])
             # print that entry
             utils.print_entry(entry)
+
+    ## runs simple demo of calendar
+    def demo_cal(self):
+        entry = cal.create_entry(self.processes_L, 'Tuesday', '22:00', 'Thursday', '6:00')
+        cal.add_to_log(entry)
+
+        entry = cal.create_entry(self.processes_L, 'Saturday', '7:00', 'Sunday', '6:30')
+        cal.add_to_log(entry)
+        eid = entry[0]
+
+        entry = cal.create_entry(self.processes_L, 'Saturday', '7:00', 'Saturday', '16:30')
+        cal.add_to_log(entry)
+
+        entry = cal.create_entry(self.processes_L, 'Monday', '0:30', 'Monday', '16:00')
+        cal.add_to_log(entry)
+
+        self.print_log()
+
+        self.remove_from_log(eid)
+
+        self.print_log()
 
 if __name__ == '__main__':
         # create new calendar passing all arguments after self
