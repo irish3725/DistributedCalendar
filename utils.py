@@ -1,4 +1,4 @@
-
+import math
 
 ## turn day (monday-sunday)
 ## to number (000 - 600)
@@ -53,6 +53,9 @@ def convert_time(time):
     # return time as an integer
     return int(time)
 
+## convert time value of int 0-47
+## to string time in format hh:mm
+## @param time - int value 0-47
 def format_time(time):
     # get hour by getting floor of time/2
     formatted = str(int(int(time)/2))
@@ -64,6 +67,30 @@ def format_time(time):
 
     return formatted
 
+## calculate duration given two times
+## in 0-47 format
+## @param s_time - starting time
+## @param e_time - ending time
+def calc_duration(s_time, e_time):
+    duration = int(e_time) - int(s_time)
+    days = int(duration / 100)
+    hours = int(duration / 2) 
+    minutes = (duration % 2) * 30
+  
+    # if appointment is more than a day
+    if duration > 47:
+        # get hours remaining in s_time day
+        hours = (48 - (int(s_time) % 100)) / 2
+        # add above to hours since e_time day started
+        hours += (int(e_time) % 100) / 2
+        # add 24 hours four each additional day
+        hours = int(hours + days * 24)
+
+    # create duration string
+    duration = (str(hours) + ' hours ' + str(minutes) + ' minutes')
+ 
+    return duration
+
 ## print entry in human readable format
 ## @param entry - calendar entry in format
 ## [entryID, [involved process ID's], startTime, endTime]
@@ -73,13 +100,14 @@ def print_entry(entry):
     e_day = convert_day(entry[3][0])
 
     # convert last two digits of time to time 
- 
     s_time = format_time(entry[2][1:]) 
     e_time = format_time(entry[3][1:])
-    duration = 0
+
+    # get duration of entry
+    duration = calc_duration(entry[2], entry[3])
 
     print('\nAppointment on', s_day, 'at', s_time, 'with:')
     for process in entry[1]:
-        print(process)
-    print('for', duration, 'ending on', e_day, 'at', e_time)
+        print('\t', process)
+    print('For', duration, '\nEnding on', e_day, 'at', e_time)
 

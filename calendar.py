@@ -1,6 +1,6 @@
 import threading
 import time
-import sys
+import sys 
 import utils
 import hashlib #import boto3
 
@@ -58,6 +58,12 @@ class Calendar:
 if __name__ == '__main__':
     # create new calendar passing all arguments after self
     cal = Calendar(sys.argv[1:])
+
+    entry = cal.create_entry(cal.processes_L, 'Tuesday', '22:00', 'Thursday', '6:00')
+    cal.add_to_log(entry)
+
+    entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Sunday', '6:30')
+    cal.add_to_log(entry)
 
     entry = cal.create_entry(cal.processes_L, 'Saturday', '7:00', 'Saturday', '16:30')
     cal.add_to_log(entry)
