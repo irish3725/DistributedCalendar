@@ -9,7 +9,7 @@ import hashlib #import boto3
 class Calendar:
 
     ## @param my_id - id of this process
-    def __init__(self, my_id=1):
+    def __init__(self, my_id=0):
         # create log as set
         self.log = {}
         # create logical clock and init to 0
@@ -31,6 +31,7 @@ class Calendar:
     ## deletes entry with that entry id
     ## @param entry_id - id of entry to be deleted
     def remove_from_log(self, entry_id):
+        self.inc_clock()
         del self.log[entry_id]
 
     ## turn start day/time and end day/time to valid log entry 
@@ -41,8 +42,6 @@ class Calendar:
     def create_entry(self, p_L, s_day, s_time, e_day, e_time):
         # incriment clock every time entry is created
         self.inc_clock()
-        
-        #
 
         # initialize start and end as the number 0
         start = 0
@@ -91,11 +90,19 @@ class Calendar:
         entry = cal.create_entry(self.processes_L, 'Monday', '0:30', 'Monday', '16:00')
         cal.add_to_log(entry)
 
-        self.print_log()
+        # print log
+#        print('log before remove:')
+#        self.print_log()
+        # remove from log and print again
+#        self.remove_from_log(eid)
+#        print('log after remove:')
+#        self.print_log()
 
-        self.remove_from_log(eid)
+        local_T = [[5,6,8,1], [4,6,0,0], [0,0,8,1], [0,0,0,1]]
+        received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
 
-        self.print_log()
+        # print matrix
+        utils.update_T(local_T, received_T, self.pid)
 
 if __name__ == '__main__':
         # create new calendar passing all arguments after self

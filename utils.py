@@ -106,7 +106,8 @@ def print_entry(entry):
     # get duration of entry
     duration = calc_duration(entry[2], entry[3])
 
-    print('\nAppointment with')
+    print('\nEntry ID:', entry[0])
+    print('Appointment with')
     for process in entry[1]:
         print('\t', process)
     print('From', s_day, 'at', s_time)
@@ -126,4 +127,42 @@ def struc_to_string(struc):
 ## @param string - some structure to be converted to a string
 def string_to_struc(string):
     return json.loads(string)
-    
+
+## prints T matrix
+## @param T - matric to be printed   
+def print_T(T):
+    for i in range(len(T)):
+        for j in range(len(T[0])):
+            print(' ', T[i][j], end='')
+        print()
+ 
+## takes in two T matrices and
+## updates first one so that it
+## is up to date with the second
+## T matrix
+## @param my_T - local T that needs to be updated
+## @parma rec_T - T that was received in message that 
+##      should be used to update local T
+def update_T(my_T, rec_T, my_id):
+    print('my_T:')
+    print_T(my_T)
+    print('rec_T:')
+    print_T(rec_T)
+
+    new_T = my_T
+    # update my row
+    for i in range(len(my_T)):
+        # check rows that are not mine
+        if i != my_id:
+            for j in range(len(my_T[0])):
+                # if we find a new largest value, update
+                if new_T[my_id][j] < rec_T[i][j]:
+                    new_T[my_id][j] = rec_T[i][j] 
+                # fill spots not in my row with largest value
+                if new_T[i][j] < rec_T[i][j]:
+                    new_T[i][j] = rec_T[i][j]   
+ 
+    print('after update:\nmy_T:')
+    print_T(new_T)
+
+
