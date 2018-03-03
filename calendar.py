@@ -48,18 +48,36 @@ class Calendar:
         end = 0
 
         # create id for entry 
-        # id is sha256 hash of current processor time with clock time concat on end
-        entry_id = hashlib.sha256(str(time.time()).encode()).hexdigest() + str(self.clock)
+        # id is sha256 hash of current processor time with pid and clock time concat on end
+        entry_id = hashlib.sha256(str(time.time()).encode()).hexdigest() + str(self.pid) + str(self.clock)
         
         # convert day part of start and end
         start += utils.convert_day(s_day)
         end += utils.convert_day(e_day)
-
-        # convert time part of start and end
+# convert time part of start and end
         start += utils.convert_time(s_time)
         end += utils.convert_time(e_time)
 
         return [entry_id, p_L, str(start).zfill(3), str(end).zfill(3)]
+
+    ## returns the log excluding entries that the receiver knows
+    ## @param to_id - id of process to be receiving message
+    def get_req_log(self, to_id):
+        send_log = self.log
+        # iterate over keys in log
+        for entry in self.log.keys():
+            
+            creator = int(entry[64:65])
+            created_at = int(entry[65:])
+            # if created at time is smaller than entry in T
+            if self.T[to_id][creator] < created_at:
+                # delete entry
+                send_log[entry] = self.log[entry]
+                print('creating entry')
+                print('pid of creator:', entry[64:65])
+                print('clock time at creation:', entry[65:])
+
+        print
 
     ## adds entry to log
     ## @param entry - entry to be entered into log
@@ -102,7 +120,10 @@ class Calendar:
         received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
 
         # print matrix
-        utils.update_T(local_T, received_T, self.pid)
+        self.T = utils.update_T(local_T, received_T, self.pid)
+        
+        self.get_req_log(0)
+        self.get_req_log(3)
 
 if __name__ == '__main__':
         # create new calendar passing all arguments after self
