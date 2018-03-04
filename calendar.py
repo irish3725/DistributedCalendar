@@ -19,15 +19,14 @@ class Calendar:
         self.calendar = [] 
         # create log as dict
         self.log = {}
-        ## if not a new session, load from file
-        if not new_session:
-            load_cal()
         # create logical clock and init to 0
         self.clock = 0
+        ## if not a new session, load from file
+        if not new_session:
+            print('Loading calendar from last session')
+            self.load_cal()
         # create process id as sha256 hash of system time       
         self.pid = my_id
-        # create list of known processes and and self
-        self.processes_L = [my_id] 
         # create T with all spots initialized to 0
         self.T = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
         # create sqs object 
@@ -36,11 +35,11 @@ class Calendar:
     ## load log and calendar from memory
     def load_cal(self):
         with open('Log.cal', 'r') as f:
-            self.log = f.read()
+            self.log = utils.string_to_struc(f.read())
             f.close()
 
         with open('Calendar.cal', 'r') as f:
-            self.calendar = f.read()
+            self.calendar = utils.string_to_struc(f.read())
             f.close()
 
 
@@ -193,7 +192,7 @@ class Calendar:
 
     ## prints contents of log
     def print_log(self):
-        if not self.log.keys():
+        if not self.log:
             print('Nothing in log.')
             return
         for lid in self.log.keys():
@@ -266,8 +265,11 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         cal.demo_cal() 
     elif sys.argv[1] == '-l':
-        cal = Calendar(new_session=True)
-        cal.demo_cal()
+        cal = Calendar(new_session=False)
+        print("Loaded log:")
+        cal.print_log()
+        print("Loaded calendar:")
+        cal.print_calendar()
     else:
         # create ui
         ui = UI.ui(cal)
