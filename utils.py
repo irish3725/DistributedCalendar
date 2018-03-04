@@ -9,34 +9,34 @@ def convert_day(day):
     day = day.lower()
 
     # map day to number
-    if day == 'monday':
+    if day == 'sunday':
         return 0
-    elif day == 'tuesday':
+    elif day == 'monday':
         return 100
-    elif day == 'wednesday':
+    elif day == 'tuesday':
         return 200
-    elif day == 'thursday':
+    elif day == 'wednesday':
         return 300
-    elif day == 'friday':
+    elif day == 'thursday':
         return 400
-    elif day == 'saturday':
+    elif day == 'friday':
         return 500
-    elif day == 'sunday':
+    elif day == 'saturday':
         return 600
     elif day == '0':
-        return 'Monday'
+        return 'sunday'
     elif day == '1':
-        return 'Tuesday'
+        return 'monday'
     elif day == '2':
-        return 'Wednesday'
+        return 'tuesday'
     elif day == '3':
-        return 'Thursday'
+        return 'wednesday'
     elif day == '4':
-        return 'Friday'
+        return 'thursday'
     elif day == '5':
-        return 'Saturday'
+        return 'friday'
     elif day == '6':
-        return 'Sunday'
+        return 'saturday'
 
 ## convert hours and minutes to a number between 0 and 47
 ## where 2:00 (military time) is 4 ## and 16:30 is 33
@@ -96,8 +96,7 @@ def calc_duration(s_time, e_time):
 ## [entryID, [involved process ID's], startTime, endTime]
 def print_entry(entry):
     # convert first digit of time to a day 
-    s_day = convert_day(entry[2][0])
-    e_day = convert_day(entry[3][0])
+    day = convert_day(entry[2][0])
 
     # convert last two digits of time to time 
     s_time = format_time(entry[2][1:]) 
@@ -106,12 +105,14 @@ def print_entry(entry):
     # get duration of entry
     duration = calc_duration(entry[2], entry[3])
     print('\n____________________________________________________________________________')
-    print('Entry ID:', entry[0])
+    print('Entry ID:', entry[1])
+    print('AppointmentName:', entry[0])
     print('Attending:\t ', end='')
-    for process in entry[1]:
+    for process in entry[4]:
         print(process, end=' ')
-    print('\nFrom:\t', s_day, 'at', s_time)
-    print('To:\t', e_day, 'at', e_time)
+    print('\nOn:\t', day)
+    print('From:\t', s_time)
+    print('To:\t', e_time)
     print('For:\t', duration)
     print('____________________________________________________________________________')
 
