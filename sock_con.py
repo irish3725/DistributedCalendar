@@ -9,8 +9,8 @@ class sock_con:
         # get port for listening for new connections
         self.port = 5000
         # create new socket on port and bind
-#        self.sock = socket.socket()
-#        self.sock.bind((self.host, port))
+        self.sock = socket.socket()
+        self.sock.bind((self.host, self.port))
 
     ## listen to (3) new connections
     ## @param port - port number for listening connection
@@ -45,4 +45,6 @@ class sock_con:
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
 
-        
+if __name__ == '__main__':
+    con = sock_con()
+    con.listen()       
