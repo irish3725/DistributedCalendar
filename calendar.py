@@ -174,7 +174,6 @@ class Calendar:
                     # and end time of new is after start time of old, they overlap
                     if entry[2] < event[3] and entry[3] > event[2]:
                         print('There is a conflict with process', p, '.\n', entry[0], 'will not be added.')
-                        self.break_tie(entry, event)
                         # return false because log will be handled in break_tie
                         return
         # if there are no collisions, add to log
