@@ -24,10 +24,10 @@ class sock_con:
         # get connection and address of sender
         conn, addr = self.sock.accept()
         print('New connection from:', addr)
-    
-        # get message contents
-        data = conn.recv(1024).decode()
-        print(addr, 'says:\n', data, '\n')
+        while data != 'end':    
+            # get message contents
+            data = conn.recv(1024).decode()
+            print(addr, 'says:\n', data, '\n')
     
     ## connect to host 
     ## @param addr - ip address of new host

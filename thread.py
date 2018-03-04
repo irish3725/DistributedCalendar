@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     ips_L = ['153.90.19.213', '18.222.71.71']
 
-    con.connect(ips_L[1])
+    con.connect(ips_L[0])
 
 #    # list of thread
 #    threads_L = []
