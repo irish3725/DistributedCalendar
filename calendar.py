@@ -52,6 +52,9 @@ class Calendar:
     ## @param a_r - add or remove can either be 0(add) or 1(remove)
     ## @param event - event in calendar to be added or removed
     def add_to_log(self, a_r, event):
+        # incriment clock every time entry is created
+        self.inc_clock()
+
         self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = event
         self.update_calendar()
         with open('Log.cal', 'r+') as f:
@@ -90,7 +93,6 @@ class Calendar:
     ## @param c_val - clock value of user who created the event
     def remove_from_calendar(self, name):
         name = name.lower()
-        self.inc_clock()
         for event in self.calendar:
             if name.lower() == event[0].lower():
                 # add delete event to log
@@ -114,9 +116,6 @@ class Calendar:
     ## @param e_time - ending day of entry
     ## @param p_L - list of processes involved
     def create_entry(self, name, day, s_time, e_time, p_L):
-        # incriment clock every time entry is created
-        self.inc_clock()
-
         # initialize start and end as the number 0
         start = 0
         end = 0
