@@ -1,8 +1,11 @@
 import threading
 import time
 import sys 
+import hashlib 
+#import boto3
+# import helper files
+import ui as UI 
 import utils
-import hashlib #import boto3
 
 
 ## Main class for Calendar Application
@@ -29,10 +32,21 @@ class Calendar:
         self.T[self.pid][self.pid] = self.clock
 
     ## deletes entry with that entry id
-    ## @param entry_id - id of entry to be deleted
-    def remove_from_log(self, entry_id):
+    ## @param uid - id of user who created the event
+    ## @param c_val - clock value of user who created the event
+    def remove_from_log(self, uid, c_val):
         self.inc_clock()
-        del self.log[entry_id]
+        for eid in self.log.keys():
+            if int(eid[64:65]) == uid and int(eid[65:]) == c_val:
+                del self.log[eid]
+                print('Removed event from calendar.\nHere is what the calendar looks like so far:')
+                self.print_log()
+                print()
+                return
+        print('Failed to remove event from calendar.\nHere is what the calendar looks like so far:')
+        self.print_log()
+        print()
+        return False
 
     ## turn start day/time and end day/time to valid log entry 
     ## @param s_day - starting day of entry
@@ -92,6 +106,18 @@ class Calendar:
             entry.extend(cal.log[event])
             # print that entry
             utils.print_entry(entry)
+        
+    ## creates calendar event, adds it to log, and sends update message to everyone
+    ## @param s_day - starting day of entry
+    ## @param s_time - starting time of entry
+    ## @param e_day - ending day of entry
+    ## @param e_time - ending time of entry
+    def add_event(self, p_L, s_day, s_time, e_day, e_time):
+        event = self.create_entry(p_L, s_day, s_time, e_day, e_time)
+        self.add_to_log(event)
+        print('Added event to calendar.\nHere is what the calendar looks like so far:')
+        self.print_log()
+        print()
 
     ## runs simple demo of calendar
     def demo_cal(self):
@@ -109,24 +135,48 @@ class Calendar:
         cal.add_to_log(entry)
 
         # print log
-#        print('log before remove:')
-#        self.print_log()
+        print('log before remove:')
+        self.print_log()
         # remove from log and print again
-#        self.remove_from_log(eid)
-#        print('log after remove:')
-#        self.print_log()
+        self.remove_from_log(0, 1)
+        print('log after remove:')
+        self.print_log()
 
-        local_T = [[5,6,8,1], [4,6,0,0], [0,0,8,1], [0,0,0,1]]
-        received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
+#        local_T = [[5,6,8,1], [4,6,0,0], [0,0,8,1], [0,0,0,1]]
+#        received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
 
         # print matrix
-        self.T = utils.update_T(local_T, received_T, self.pid)
+#        self.T = utils.update_T(local_T, received_T, self.pid)
         
-        self.get_req_log(0)
-        self.get_req_log(3)
+#        self.get_req_log(0)
+#        self.get_req_log(3)
+
+    def ui(self):
+        val = ''
+        
+        print('Type q to exit.\nWould you like to add or remove a calendar event?')
+        while val != 'q' and val != 'quit' and val != 'exit':
+            val = input('(add/remove) > ')
+            print(val)
 
 if __name__ == '__main__':
         # create new calendar passing all arguments after self
         cal = Calendar()
 
-        cal.demo_cal() 
+        threads_L = []
+
+        if len(sys.argv) > 1:
+            cal.demo_cal() 
+        else:
+            # create ui
+            ui = UI.ui(cal)
+            threads_L.append(threading.Thread(name='ui', target=ui.run))
+            
+            # start threads
+            for thread in threads_L:
+                thread.start()
+
+            # join threads
+            for thread in threads_L:
+                thread.join()
+

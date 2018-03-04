@@ -105,14 +105,15 @@ def print_entry(entry):
 
     # get duration of entry
     duration = calc_duration(entry[2], entry[3])
-
-    print('\nEntry ID:', entry[0])
-    print('Appointment with')
+    print('\n____________________________________________________________________________')
+    print('Entry ID:', entry[0])
+    print('Attending:\t ', end='')
     for process in entry[1]:
-        print('\t', process)
-    print('From', s_day, 'at', s_time)
-    print('To', e_day, 'at', e_time)
-    print('For', duration)
+        print(process, end=' ')
+    print('\nFrom:\t', s_day, 'at', s_time)
+    print('To:\t', e_day, 'at', e_time)
+    print('For:\t', duration)
+    print('____________________________________________________________________________')
 
 ## convert some datastructure to a string
 ## I made this because I can never remember
