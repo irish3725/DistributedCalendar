@@ -9,8 +9,8 @@ class sock_con:
         # get port for listening for new connections
         self.port = 5000
         # create new socket on port and bind
-        self.sock = socket.socket()
-        self.sock.bind((host, port))
+#        self.sock = socket.socket()
+#        self.sock.bind((self.host, port))
 
     ## listen to (3) new connections
     ## @param port - port number for listening connection
@@ -34,15 +34,15 @@ class sock_con:
     ## @param c_port - port of new host
     def connect(self, host, c_port=5000):
         # create new socket and connect to host on that socket
-        socket = socket.socket()
-        socket.connect((host, c_port))
+        sock = socket.socket()
+        sock.connect((host, c_port))
 
         # send on message to that host
         message = 'I smell like beef...'
-        socket.send(message.encode())
+        sock.send(message.encode())
 
         # safely shutdown and close sockets
-        socket.shutdown(socket.SHUT_RDWR)
-        socket.close()
+        sock.shutdown(socket.SHUT_RDWR)
+        sock.close()
 
         
