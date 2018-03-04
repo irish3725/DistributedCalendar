@@ -2,7 +2,9 @@ import threading
 import time
 import sys 
 import hashlib 
+from collections import Counter 
 #import boto3
+
 # import helper files
 import ui as UI 
 import utils
@@ -12,9 +14,14 @@ import utils
 class Calendar:
 
     ## @param my_id - id of this process
-    def __init__(self, my_id=0):
-        # create log as set
+    def __init__(self, my_id=0, new_session=True):
+        # create calendar as dict
+        self.calendar = [] 
+        # create log as dict
         self.log = {}
+        ## if not a new session, load from file
+        if not new_session:
+            load_cal()
         # create logical clock and init to 0
         self.clock = 0
         # create process id as sha256 hash of system time       
@@ -26,25 +33,78 @@ class Calendar:
         # create sqs object 
 #        new_sqs = boto3.resource('sqs', 'us-east-2')
 
+    ## load log and calendar from memory
+    def load_cal(self):
+        with open('Log.cal', 'r') as f:
+            self.log = f.read()
+            f.close()
+
+        with open('Calendar.cal', 'r') as f:
+            self.calendar = f.read()
+            f.close()
+
+
     ## incriments clock and correct spot in self.T
     def inc_clock(self):
         self.clock += 1
         self.T[self.pid][self.pid] = self.clock
 
+    ## adds event to log updates calendar
+    ## @param a_r - add or remove can either be 0(add) or 1(remove)
+    ## @param event - event in calendar to be added or removed
+    def add_to_log(self, a_r, event):
+        self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = event
+        self.update_calendar()
+        with open('Log.cal', 'r+') as f:
+            text = utils.struc_to_string(self.log)
+            f.write(text)
+            f.truncate()
+            f.close()
+
+        with open('Calendar.cal', 'r+') as f:
+            text = utils.struc_to_string(self.calendar)
+            f.write(text)
+            f.truncate()
+            f.close()
+
+    ## updates calendar according to log
+    def update_calendar(self):
+        add = []
+        remove = []
+        # clear calendar
+        self.calendar = []
+        # iterate over log to get calendar events
+        for logid in self.log.keys():
+            # if add event, append to add list
+            if logid[:1] == '0':
+                add.append(self.log[logid])
+            # else, is remove and append to remove
+            else:
+                remove.append(self.log[logid])
+        for event in add:
+            if event not in remove:
+                self.calendar.append(event)
+        return
+
     ## deletes entry with that entry id
     ## @param uid - id of user who created the event
     ## @param c_val - clock value of user who created the event
-    def remove_from_log(self, name):
+    def remove_from_calendar(self, name):
+        name = name.lower()
         self.inc_clock()
-        for e_name in self.log.keys():
-            if name.lower() == e_name.lower():
-                del self.log[name]
+        for event in self.calendar:
+            if name.lower() == event[0].lower():
+                # add delete event to log
+                self.add_to_log('1', event)
+                # update calendar
+                self.update_calendar()
                 print('Removed', name, 'from calendar.\nHere is what the calendar looks like so far:')
-                self.print_log()
+                self.print_calendar()
+                # add remove event to log
                 print()
                 return
         print('Failed to remove', name, 'from calendar.\nHere is what the calendar looks like so far:')
-        self.print_log()
+        self.print_calendar()
         print()
         return False
 
@@ -81,60 +141,76 @@ class Calendar:
         send_log = self.log
         # iterate over keys in log
         for entry in self.log.keys():
-            
-            creator = int(entry[64:65])
-            created_at = int(entry[65:])
+            # first entry in log is 5 digits where first is the 
+            # '0' for add event or '1' for remove event, the second is
+            # creator and the last 3 are the clock value of that event 
+            creator = int(entry[1:2])
+            created_at = int(entry[2:])
             # if created at time is smaller than entry in T
             if self.T[to_id][creator] < created_at:
-                # delete entry
+                # add entry to new truncated log
                 send_log[entry] = self.log[entry]
-                print('creating entry')
-                print('pid of creator:', entry[64:65])
-                print('clock time at creation:', entry[65:])
-
-        print
 
     ## adds entry to log
     ## @param entry - entry to be entered into log
-    def add_to_log(self, entry):
-        if self.check_log(entry):
-            self.log[entry[0]] = entry[1:]
+    def add_to_calendar(self, entry):
+        if self.check_calendar(entry):
+            self.add_to_log('0', entry)
             return True
         return False
 
     ## makes sure log entry does not overlap with other entries
-    def check_log(self, entry):
-        if not self.log.keys():
+    def check_calendar(self, entry):
+        # if calendar is empty, add it (update calendar makes sure
+        # calendar is correct)
+        if not self.calendar:
             return True
-        for name in self.log.keys():
+        # if calendar is not empty, check events in calendar
+        for event in self.calendar:
             # check to see if name is unique
-            if name == entry[0]:
+            if event[0] == entry[0]:
                 print('There is already an entry in the log with this name.')
                 return False
-            # check to see if processes overlap
+            # check iterate over all involved processes in new entry
             for p in entry[4]:
-                if p in self.log[name][3]:
+                # if an involved process is also in the event check to see if
+                # events overlap
+                if p in event[4]:
                     # if start time of new is before end time of old
                     # and end time of new is after start time of old, they overlap
-                    if self.log[name][1] < entry[3] and self.log[name][2] > entry[2]:
-                        print('There is a conflict with process', p, '.\n', entry[0], 'will not be addes.')
+                    if entry[2] < event[3] and entry[3] > event[2]:
+                        print('There is a conflict with process', p, '.\n', entry[0], 'will not be added.')
+                        self.break_tie(entry)
+                        # return false because log will be handled in break_tie
                         return False
         return True
 
+    ## checks T matrix in log for which process came first,
+    ## if T matrix can't decide, use EID
+    ## @param entry - new entry to be decided if saved or not
+    def break_tie(self, entry):
+        print('Haven\'t implimented tie break yet')
+
     ## prints contents of log
-    def print_log(self, everyone=False):
+    def print_log(self):
+        if not self.log.keys():
+            print('Nothing in log.')
+            return
+        for lid in self.log.keys():
+            print('log entry', lid + ':')
+            print(self.log[lid])
+
+    ## prints contents of calendar
+    ## @param everyone - parameter for deciding to print all calendar
+    ##      events or just the events involving this process
+    def print_calendar(self, everyone=False):
         empty = True
-        for event in self.log.keys():
-            print(self.log[event][3])
-            if everyone or self.pid in self.log[event][3]:
+        for event in self.calendar:
+            if everyone or self.pid in event[4]:
                 empty = False
-                # recreate calendar entry from dictionary
-                entry = [event] 
-                entry.extend(cal.log[event])
-                # print that entry
-                utils.print_entry(entry)
+                utils.print_entry(event)
         if empty:
-            print('Nothing in calendar')
+            print('Nothing in calendar.')
         
     ## creates calendar event, adds it to log, and sends update message to everyone
     ## @param name - name of event
@@ -144,32 +220,32 @@ class Calendar:
     ## @param p_L - list of processes involvedlj
     def add_event(self, name, day, s_time, e_time, p_L):
         event = self.create_entry(name, day, s_time, e_time, p_L)
-        if self.add_to_log(event):
+        if self.add_to_calendar(event):
             print('Added event to calendar.\nHere is what the calendar looks like so far:')
-        self.print_log()
+        self.print_calendar(True)
         print()
 
     ## runs simple demo of calendar
     def demo_cal(self):
 
         entry = cal.create_entry('Event1', 'Tuesday', '2:00', '6:00', [0,1,2,] )
-        cal.add_to_log(entry)
+        cal.add_to_calendar(entry)
         eid = entry[0]
 
         entry = cal.create_entry('Event2', 'Tuesday', '12:00', '12:30', [0,2] )
-        cal.add_to_log(entry)
+        cal.add_to_calendar(entry)
 
         entry = cal.create_entry('Event3', 'Tuesday', '2:00', '6:00', [1,3] )
-        cal.add_to_log(entry)
+        cal.add_to_calendar(entry)
         
         entry = cal.create_entry('Event4', 'Tuesday', '2:00', '6:00', [1,3] )
-        cal.add_to_log(entry)
+        cal.add_to_calendar(entry)
 
         # print log
         print('log before remove:')
         self.print_log()
         # remove from log and print again
-        self.remove_from_log('Event2')
+        self.remove_from_calendar('Event2')
 
 #        local_T = [[5,6,8,1], [4,6,0,0], [0,0,8,1], [0,0,0,1]]
 #        received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
@@ -187,8 +263,11 @@ if __name__ == '__main__':
     threads_L = []
 
     # if input arguments are given, run demo
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 1:
         cal.demo_cal() 
+    elif sys.argv[1] == '-l':
+        cal = Calendar(new_session=True)
+        cal.demo_cal()
     else:
         # create ui
         ui = UI.ui(cal)
