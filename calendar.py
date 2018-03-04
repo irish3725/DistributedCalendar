@@ -152,23 +152,19 @@ class Calendar:
     ## adds entry to log
     ## @param entry - entry to be entered into log
     def add_to_calendar(self, entry):
-        if self.check_calendar(entry):
-            self.add_to_log('0', entry)
-            return True
-        return False
-
-    ## makes sure log entry does not overlap with other entries
-    def check_calendar(self, entry):
         # if calendar is empty, add it (update calendar makes sure
         # calendar is correct)
         if not self.calendar:
+            self.add_to_log('0', entry)
             return True
+
         # if calendar is not empty, check events in calendar
         for event in self.calendar:
             # check to see if name is unique
             if event[0] == entry[0]:
                 print('There is already an entry in the log with this name.')
                 return False
+            # if it doesn't already exist, add it to log
             # check iterate over all involved processes in new entry
             for p in entry[4]:
                 # if an involved process is also in the event check to see if
@@ -178,16 +174,23 @@ class Calendar:
                     # and end time of new is after start time of old, they overlap
                     if entry[2] < event[3] and entry[3] > event[2]:
                         print('There is a conflict with process', p, '.\n', entry[0], 'will not be added.')
-                        self.break_tie(entry)
+                        self.break_tie(entry, event)
                         # return false because log will be handled in break_tie
-                        return False
-        return True
+                        return
+        # if there are no collisions, add to log
+        self.add_to_log('0', entry)
 
     ## checks T matrix in log for which process came first,
     ## if T matrix can't decide, use EID
     ## @param entry - new entry to be decided if saved or not
-    def break_tie(self, entry):
-        print('Haven\'t implimented tie break yet')
+    def break_tie(self, new, old):
+        self.add_to_log('0', new)
+        if new[1] < old[1]:
+            print(old, 'lost tie to', new)
+            self.remove_from_calendar(old[0])
+        else:
+            print(new, 'lost tie to', old)
+            self.remove_from_calendar(new[0])
 
     ## prints contents of log
     def print_log(self):
@@ -227,6 +230,7 @@ class Calendar:
     def demo_cal(self):
 
         entry = cal.create_entry('Event1', 'Tuesday', '2:00', '6:00', [0,1,2,] )
+        print('adding entry', entry)
         cal.add_to_calendar(entry)
         eid = entry[0]
 
@@ -236,7 +240,10 @@ class Calendar:
         entry = cal.create_entry('Event3', 'Sunday', '2:00', '6:00', [1,3] )
         cal.add_to_calendar(entry)
         
-        entry = cal.create_entry('Event4', 'Tuesday', '2:00', '6:00', [1,3] )
+        entry = cal.create_entry('Event4', 'Thursday', '2:00', '6:00', [1,3] )
+        cal.add_to_calendar(entry)
+
+        entry = cal.create_entry('Event5', 'Thursday', '2:00', '6:00', [1,3] )
         cal.add_to_calendar(entry)
 
         # print log

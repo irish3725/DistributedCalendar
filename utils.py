@@ -168,4 +168,3 @@ def update_T(my_T, rec_T, my_id):
     print_T(new_T)
     return new_T
 
-
