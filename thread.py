@@ -1,5 +1,7 @@
 import threading
 
+    ips_L = ['153.90.19.213', '18.222.71.71']
+
     # list of thread
     threads_L = []
     # stuff to pass print_stuff
