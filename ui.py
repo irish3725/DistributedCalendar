@@ -50,7 +50,7 @@ class ui:
             if val == 'remove':
                 val = self.get_d_name()         
             if val == 'name' and self.name != '':
-                self.cal.remove_from_log(self.name)
+                self.cal.remove_from_calendar(self.name)
                 self.name = ''
 
             # display calendar
@@ -182,7 +182,7 @@ class ui:
         val = ''
         print('What day is this appointment? (Enter cancel to cancel.)')
         while val != 'q' and val != 'quit' and val != 'exit':
-            val = input('(Sunday-Saturday/cancel) > ').lower()
+            val = input('(sunday-saturday/cancel) > ').lower()
             if val == 'cancel':
                 self.s_day = ''
                 self.s_time = ''

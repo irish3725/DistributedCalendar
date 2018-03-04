@@ -55,7 +55,7 @@ class Calendar:
         # incriment clock every time entry is created
         self.inc_clock()
 
-        self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = event
+        self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = [event, self.T]
         self.update_calendar()
         with open('Log.cal', 'r+') as f:
             text = utils.struc_to_string(self.log)
@@ -79,10 +79,10 @@ class Calendar:
         for logid in self.log.keys():
             # if add event, append to add list
             if logid[:1] == '0':
-                add.append(self.log[logid])
+                add.append(self.log[logid][0])
             # else, is remove and append to remove
             else:
-                remove.append(self.log[logid])
+                remove.append(self.log[logid][0])
         for event in add:
             if event not in remove:
                 self.calendar.append(event)
@@ -201,7 +201,7 @@ class Calendar:
     ## prints contents of calendar
     ## @param everyone - parameter for deciding to print all calendar
     ##      events or just the events involving this process
-    def print_calendar(self, everyone=False):
+    def print_calendar(self, everyone=True):
         empty = True
         for event in self.calendar:
             if everyone or self.pid in event[4]:
@@ -230,10 +230,10 @@ class Calendar:
         cal.add_to_calendar(entry)
         eid = entry[0]
 
-        entry = cal.create_entry('Event2', 'Tuesday', '12:00', '12:30', [0,2] )
+        entry = cal.create_entry('Event2', 'Wednesday', '12:00', '12:30', [0,2] )
         cal.add_to_calendar(entry)
 
-        entry = cal.create_entry('Event3', 'Tuesday', '2:00', '6:00', [1,3] )
+        entry = cal.create_entry('Event3', 'Sunday', '2:00', '6:00', [1,3] )
         cal.add_to_calendar(entry)
         
         entry = cal.create_entry('Event4', 'Tuesday', '2:00', '6:00', [1,3] )
