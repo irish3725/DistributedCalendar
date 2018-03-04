@@ -24,6 +24,7 @@ class sock_con:
         # get connection and address of sender
         conn, addr = self.sock.accept()
         print('New connection from:', addr)
+        data = ''
         while data != 'end':    
             # get message contents
             data = conn.recv(1024).decode()
