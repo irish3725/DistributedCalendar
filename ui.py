@@ -56,6 +56,7 @@ class ui:
             # display calendar
             if val == 'mine' or val == 'everyone':
                 val = self.display(val)
+        self.cal.poll = True
             
         
     ## method to check for valid time

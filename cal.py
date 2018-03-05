@@ -1,9 +1,9 @@
-import threading
+import threading 
 import time
 import sys 
 import hashlib 
 from collections import Counter 
-#import boto3
+import boto3
 
 # import helper files
 import ui as UI 
@@ -15,6 +15,15 @@ class Calendar:
 
     ## @param my_id - id of this process
     def __init__(self, my_id=0, new_session=True):
+        self.poll = False
+        # create sqs connection
+        self.sqs = boto3.client('sqs', 'us-west-2',
+            aws_secret_access_key='KIMBlu5Ioz7NBJi3Wlt+i3eGhOrlYUERg/+pUOIY',#)
+            aws_access_key_id='AKIAI7GICBJQPDQBCLTA')
+#        self.sqs = boto3.resource('sqs')
+        # create queue with timeout of 120 seconds
+#        self.q = self.sqs.create_queue(QueueName='CalendarQueue')
+        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/CalendarQueue'
         # create calendar as dict
         self.calendar = [] 
         # create log as dict
@@ -31,6 +40,37 @@ class Calendar:
         self.T = [[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]]
         # create sqs object 
 #        new_sqs = boto3.resource('sqs', 'us-east-2')
+
+    def update_log(self, n_log):
+        update = False
+        for entry in n_log:
+            if entry not in self.log.keys():
+                update = True
+                self.log[entry] = n_log[entry]
+        if update:
+            self.update_calendar()
+
+    def poll_queue(self):
+        while self.poll:
+            response = self.sqs.receive_message(
+                AttributeNames=['To'],
+                QueueUrl=self.q_url,
+                MaxNumberOfMessages=1
+            )
+            if 'Messages' in response.keys():
+                message = response['Messages'][0]
+                if message['Body'][:1] == str(self.pid):
+                    receipt_handle = message['ReceiptHandle']
+                    print('\nmessage:', message.get('Body'))
+                    self.sqs.delete_message(QueueUrl=self.q_url, ReceiptHandle=receipt_handle)
+
+    ## sends current log
+    def send_log(self, entry):
+        messages = []
+        # for each process in entry, create message
+        for process in entry[4]:
+            m = str(process) +  self.get_req_log(process)
+            response = self.sqs.send_message(QueueUrl=self.q_url, MessageBody=m)
 
     ## load log and calendar from memory
     def load_cal(self):
@@ -57,6 +97,7 @@ class Calendar:
 
         self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = [event, self.T]
         self.update_calendar()
+        self.send_log(event)
         with open('Log.cal', 'r+') as f:
             text = utils.struc_to_string(self.log)
             f.write(text)
@@ -136,7 +177,7 @@ class Calendar:
     ## returns the log excluding entries that the receiver knows
     ## @param to_id - id of process to be receiving message
     def get_req_log(self, to_id):
-        send_log = self.log
+        send_log = {} 
         # iterate over keys in log
         for entry in self.log.keys():
             # first entry in log is 5 digits where first is the 
@@ -148,6 +189,7 @@ class Calendar:
             if self.T[to_id][creator] < created_at:
                 # add entry to new truncated log
                 send_log[entry] = self.log[entry]
+        return utils.struc_to_string(send_log)
 
     ## adds entry to log
     ## @param entry - entry to be entered into log
@@ -252,6 +294,8 @@ class Calendar:
         # remove from log and print again
         self.remove_from_calendar('Event2')
 
+        self.poll_queue()
+
 #        local_T = [[5,6,8,1], [4,6,0,0], [0,0,8,1], [0,0,0,1]]
 #        received_T = [[4,0,0,0], [4,9,6,4], [0,0,6,1], [0,0,6,4]]
 
@@ -268,24 +312,29 @@ if __name__ == '__main__':
     threads_L = []
 
     # if input arguments are given, run demo
-    if len(sys.argv) == 1:
-        cal.demo_cal() 
-    elif sys.argv[1] == '-l':
+    if len(sys.argv) > 1 and sys.argv[1] == '-l':
         cal = Calendar(new_session=False)
         print("Loaded log:")
         cal.print_log()
         print("Loaded calendar:")
         cal.print_calendar()
+    elif len(sys.argv) > 1:
+        cal = Calendar(my_id=int(sys.argv[1]))
+        # create ui
+        ui = UI.ui(cal)
+        threads_L.append(threading.Thread(name='ui', target=ui.run))
+        threads_L.append(threading.Thread(name='poll', target=cal.poll_queue))
     else:
         # create ui
         ui = UI.ui(cal)
         threads_L.append(threading.Thread(name='ui', target=ui.run))
+        threads_L.append(threading.Thread(name='poll', target=cal.poll_queue))
         
-        # start threads
-        for thread in threads_L:
-            thread.start()
+    # start threads
+    for thread in threads_L:
+        thread.start()
 
-        # join threads
-        for thread in threads_L:
-            thread.join()
+    # join threads
+    for thread in threads_L:
+        thread.join()
 
