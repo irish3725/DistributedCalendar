@@ -50,6 +50,15 @@ class Calendar:
         if update:
             self.update_calendar()
 
+    def receive_message(self, message):
+        message = utils.string_to_struc(message)
+        n_log = message[0]
+        r_T = message[1]
+        sender = message[2]
+        self.update_log(n_log)
+        self.T = utils.update_T(self.T, r_T, self.pid)
+        
+
     def poll_queue(self):
         while self.poll:
             response = self.sqs.receive_message(
@@ -62,6 +71,7 @@ class Calendar:
                 if message['Body'][:1] == str(self.pid):
                     receipt_handle = message['ReceiptHandle']
                     print('\nmessage:', message.get('Body'))
+                    self.receive_message(message.get('Body'))
                     self.sqs.delete_message(QueueUrl=self.q_url, ReceiptHandle=receipt_handle)
 
     ## sends current log
@@ -189,7 +199,7 @@ class Calendar:
             if self.T[to_id][creator] < created_at:
                 # add entry to new truncated log
                 send_log[entry] = self.log[entry]
-        return utils.struc_to_string(send_log)
+        return utils.struc_to_string([send_log, self.T, self.pid])
 
     ## adds entry to log
     ## @param entry - entry to be entered into log
