@@ -18,8 +18,8 @@ class Calendar:
         self.poll = False
         # create sqs connection
         self.sqs = boto3.client('sqs', 'us-west-2',
-            aws_secret_access_key='KIMBlu5Ioz7NBJi3Wlt+i3eGhOrlYUERg/+pUOIY',#)
-            aws_access_key_id='AKIAI7GICBJQPDQBCLTA')
+            aws_secret_access_key='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',#)
+            aws_access_key_id='AKIAIVCVGBRSVQKRNB3Q')
 #        self.sqs = boto3.resource('sqs')
         # create queue with timeout of 120 seconds
 #        self.q = self.sqs.create_queue(QueueName='CalendarQueue')
