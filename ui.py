@@ -21,7 +21,7 @@ class ui:
         # value to read input into 
         val = ''
 
-        print('Type q to exit.\nWould you like to add or remove a calendar event, or displaya calendar?')
+        print('Type q to exit.\nWould you like to add or remove a calendar event, or display a calendar?')
         while val != 'q' and val != 'quit' and val != 'exit':
             val = input('(add/remove/mine/everyone) > ').lower()
 
@@ -56,7 +56,7 @@ class ui:
             # display calendar
             if val == 'mine' or val == 'everyone':
                 val = self.display(val)
-        self.cal.poll = True
+        self.cal.poll = False
             
         
     ## method to check for valid time
@@ -109,9 +109,9 @@ class ui:
     ## displays log
     def display(self, who):
         if who == 'everyone':
-            self.cal.print_log(True)
+            self.cal.print_calendar(True)
         else:
-            self.cal.print_log()
+            self.cal.print_calendar()
         return ''
 
     ## ui loop for inputting name of event to be deleted

@@ -15,15 +15,17 @@ class Calendar:
 
     ## @param my_id - id of this process
     def __init__(self, my_id=0, new_session=True):
-        self.poll = False
+        self.startchar = 'c'
+        self.poll = True
         # create sqs connection
         self.sqs = boto3.client('sqs', 'us-west-2',
             aws_secret_access_key='40P15GW5em0iibFLEsX0a1t6eBSanwmEyGL8sy+q',#)
             aws_access_key_id='AKIAIVCVGBRSVQKRNB3Q')
 #        self.sqs = boto3.resource('sqs')
         # create queue with timeout of 120 seconds
-#        self.q = self.sqs.create_queue(QueueName='CalendarQueue')
-        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/CalendarQueue'
+        self.q = self.sqs.create_queue(QueueName='newQueue')
+        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/newQueue'
+#        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/CalendarQueue'
         # create calendar as dict
         self.calendar = [] 
         # create log as dict
@@ -45,8 +47,30 @@ class Calendar:
         update = False
         for entry in n_log:
             if entry not in self.log.keys():
+                #entry to be deleted
+                d_entry = ''
+                
                 update = True
+#                add_to_log('0', n_log[entry], send=False):
                 self.log[entry] = n_log[entry]
+                self.update_calendar()
+
+                # get event in new entry
+                event = n_log[entry][0]
+                for o_key in self.log.keys():
+                    if o_key[:1] == '0' and o_key != entry:
+                        o_event = self.log[o_key][0]
+                        for process in event[4]:
+                            if process in o_event[4]:
+                            #check to see if events overlap
+                                if int(event[2]) < int(o_event[3]) and int(event[3]) > int(o_event[2]):
+                                    print('found conflict')
+                                    d_entry = self.break_tie(event, o_event)
+                                    break
+                if d_entry != '':
+                    print('removing', d_entry)
+                    self.remove_from_calendar(d_entry)
+                    d_entry = ''
         if update:
             self.update_calendar()
 
@@ -55,32 +79,34 @@ class Calendar:
         n_log = message[0]
         r_T = message[1]
         sender = message[2]
-        self.update_log(n_log)
         self.T = utils.update_T(self.T, r_T, self.pid)
+        self.update_log(n_log)
         
 
     def poll_queue(self):
+        print('Begin polling...')
         while self.poll:
             response = self.sqs.receive_message(
-                AttributeNames=['To'],
                 QueueUrl=self.q_url,
-                MaxNumberOfMessages=1
             )
             if 'Messages' in response.keys():
                 message = response['Messages'][0]
-                if message['Body'][:1] == str(self.pid):
-                    receipt_handle = message['ReceiptHandle']
-                    print('\nmessage:', message.get('Body'))
-                    self.receive_message(message.get('Body'))
-                    self.sqs.delete_message(QueueUrl=self.q_url, ReceiptHandle=receipt_handle)
+                if message['Body'][:1] == self.startchar:
+                    if message['Body'][1:2] == str(self.pid):
+                        receipt_handle = message['ReceiptHandle']
+                        print('\nmessage:', message.get('Body'))
+                        self.receive_message(message.get('Body')[2:])
+                        self.sqs.delete_message(QueueUrl=self.q_url, ReceiptHandle=receipt_handle)
 
     ## sends current log
     def send_log(self, entry):
         messages = []
         # for each process in entry, create message
         for process in entry[4]:
-            m = str(process) +  self.get_req_log(process)
-            response = self.sqs.send_message(QueueUrl=self.q_url, MessageBody=m)
+            if process != self.pid:
+                m = self.startchar + str(process) +  self.get_req_log(process)
+                print('sending message:', m)
+                response = self.sqs.send_message(QueueUrl=self.q_url, MessageBody=m)
 
     ## load log and calendar from memory
     def load_cal(self):
@@ -101,13 +127,16 @@ class Calendar:
     ## adds event to log updates calendar
     ## @param a_r - add or remove can either be 0(add) or 1(remove)
     ## @param event - event in calendar to be added or removed
-    def add_to_log(self, a_r, event):
+    def add_to_log(self, a_r, event, send=True):
         # incriment clock every time entry is created
         self.inc_clock()
 
         self.log[a_r + str(self.pid) + str(self.clock).zfill(3)] = [event, self.T]
         self.update_calendar()
-        self.send_log(event)
+        if send:
+#            print('sending new log entry')
+            self.send_log(event)
+
         with open('Log.cal', 'r+') as f:
             text = utils.struc_to_string(self.log)
             f.write(text)
@@ -173,7 +202,7 @@ class Calendar:
 
         # create id for entry 
         # id is sha256 hash of current processor time with pid and clock time concat on end
-        entry_id = hashlib.sha256(str(time.time()).encode()).hexdigest() + str(self.pid) + str(self.clock).zfill(3)
+        entry_id = hashlib.sha256(str(time.time()).encode()).hexdigest() + str(self.pid) + str(self.clock + 1).zfill(3)
         
         # convert day part of start and end
         start += utils.convert_day(day)
@@ -235,13 +264,12 @@ class Calendar:
     ## if T matrix can't decide, use EID
     ## @param entry - new entry to be decided if saved or not
     def break_tie(self, new, old):
-        self.add_to_log('0', new)
         if new[1] < old[1]:
             print(old, 'lost tie to', new)
-            self.remove_from_calendar(old[0])
+            return old[0]
         else:
             print(new, 'lost tie to', old)
-            self.remove_from_calendar(new[0])
+            return new[0]
 
     ## prints contents of log
     def print_log(self):
@@ -331,13 +359,13 @@ if __name__ == '__main__':
         cal = Calendar(my_id=int(sys.argv[1]))
         # create ui
         ui = UI.ui(cal)
-        threads_L.append(threading.Thread(name='ui', target=ui.run))
         threads_L.append(threading.Thread(name='poll', target=cal.poll_queue))
+        threads_L.append(threading.Thread(name='ui', target=ui.run))
     else:
         # create ui
         ui = UI.ui(cal)
-        threads_L.append(threading.Thread(name='ui', target=ui.run))
         threads_L.append(threading.Thread(name='poll', target=cal.poll_queue))
+        threads_L.append(threading.Thread(name='ui', target=ui.run))
         
     # start threads
     for thread in threads_L:
