@@ -15,7 +15,7 @@ class Calendar:
 
     ## @param my_id - id of this process
     def __init__(self, my_id=0, new_session=True):
-        self.startchar = 'c'
+        self.startchar = 'e'
         self.poll = True
         # create sqs connection
         self.sqs = boto3.client('sqs', 'us-west-2',
@@ -23,8 +23,8 @@ class Calendar:
             aws_access_key_id='AKIAIVCVGBRSVQKRNB3Q')
 #        self.sqs = boto3.resource('sqs')
         # create queue with timeout of 120 seconds
-        self.q = self.sqs.create_queue(QueueName='newQueue')
-        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/newQueue'
+        self.q = self.sqs.create_queue(QueueName='queue')
+        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/queue'
 #        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/CalendarQueue'
         # create calendar as dict
         self.calendar = [] 
