@@ -19,13 +19,11 @@ class Calendar:
         self.poll = True
         # create sqs connection
         self.sqs = boto3.client('sqs', 'us-west-2',
-            aws_secret_access_key='40P15GW5em0iibFLEsX0a1t6eBSanwmEyGL8sy+q',#)
-            aws_access_key_id='AKIAIVCVGBRSVQKRNB3Q')
-#        self.sqs = boto3.resource('sqs')
+            aws_secret_access_key='',#)
+            aws_access_key_id='')
         # create queue with timeout of 120 seconds
         self.q = self.sqs.create_queue(QueueName='queue')
-        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/queue'
-#        self.q_url = 'https://sqs.us-east-2.amazonaws.com/044793243766/CalendarQueue'
+        self.q_url = ''
         # create calendar as dict
         self.calendar = [] 
         # create log as dict
